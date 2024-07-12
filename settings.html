@@ -1,0 +1,81 @@
+document.addEventListener('DOMContentLoaded', () => {
+  const sidebar = document.querySelector('.sidebar');
+  const toggleButton = document.getElementById('toggle-sidebar');
+  const newChatButton = document.getElementById('new-chat');
+  const settingsButton = document.getElementById('settings-btn');
+  const settingsPage = document.getElementById('settings-page');
+  const settingsPageContent = settingsPage.querySelector('.settings-page-content');
+  const settingsForm = document.getElementById('settings-form');
+  const saveButton = document.getElementById('save-settings');
+  const cancelButton = document.getElementById('cancel-settings');
+  const defaultButton = document.getElementById('default-settings');
+
+  const defaultSettings = {
+    'model-provider': 'openai',
+    'api-key': '',
+    'api-host': 'https://api.openai.com/v1',
+    'model': '',
+    'temperature': 0.7,
+    'top-p': 1.0,
+    'presence-penalty': 0.0,
+    'frequency-penalty': 0.0
+  };
+
+  function loadSettings() {
+    const settings = JSON.parse(localStorage.getItem('settings')) || defaultSettings;
+    for (const key in settings) {
+      if (settings.hasOwnProperty(key)) {
+        const element = settingsForm.elements[key];
+        if (element) {
+          element.value = settings[key];
+        }
+      }
+    }
+  }
+
+  function saveSettings() {
+    const settings = {};
+    for (const element of settingsForm.elements) {
+      if (element.name) {
+        settings[element.name] = element.value;
+      }
+    }
+    localStorage.setItem('settings', JSON.stringify(settings));
+  }
+
+  function restoreDefaults() {
+    for (const key in defaultSettings) {
+      if (defaultSettings.hasOwnProperty(key)) {
+        const element = settingsForm.elements[key];
+        if (element) {
+          element.value = defaultSettings[key];
+        }
+      }
+    }
+  }
+
+  function openSettingsPage() {
+    settingsPage.classList.add('open');
+    setTimeout(() => {
+      settingsPageContent.style.opacity = '1';
+    }, 50);
+    loadSettings();
+  }
+
+  function closeSettingsPage() {
+    settingsPageContent.style.opacity = '0';
+    setTimeout(() => {
+      settingsPage.classList.remove('open');
+    }, 300);
+  }
+
+  toggleButton.addEventListener('click', () => {
+    sidebar.classList.toggle('closed');
+    toggleButton.setAttribute('data-tooltip', sidebar.classList.contains('closed') ? 'Open Sidebar' : 'Close Sidebar');
+  });
+
+  newChatButton.addEventListener('mouseenter', () => {
+    newChatButton.setAttribute('data-tooltip', 'New Chat');
+  });
+
+  settingsButton.addEventListener('click', openSettingsPage);

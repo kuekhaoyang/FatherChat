@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FatherChat</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="scripts.js" defer></script>
+</head>
+<body>
+    <div class="sidebar">
+        <div class="sidebar-header">
+            <button class="sidebar-btn" id="toggle-sidebar" data-tooltip="Close Sidebar">
+                <img src="assets/close-sidebar.svg" alt="Close Sidebar Icon" width="24">
+            </button>
+            <button class="sidebar-btn" id="new-chat" data-tooltip="New Chat">
+                <img src="assets/new-chat.svg" alt="New Chat Icon" width="24">
+            </button>
+        </div>
+        <div class="button">
+            <img src="assets/father-chat.png" alt="FatherChat Icon" width="24">
+            <span>FatherChat</span>
+        </div>
+        <div class="button">
+            <img src="assets/explore-gpts.svg" alt="Explore Icon" width="24">
+            <span>Explore GPTs</span>
+        </div>
+        <div class="settings" id="settings-btn">
+            <img src="assets/settings.svg" alt="Settings Icon" width="24">
+            <span>Settings</span>
+        </div>
+    </div>
+    <main class="main-content">
+        <div class="chat-area">
+            <div id="chat-messages"></div>
+            <!-- Chat messages will go here -->
+        </div>
+        <div class="input-bar">
+            <button class="attachment-btn">
+                <img src="assets/attachment-icon.svg" alt="Attachment Icon" width="24">
+            </button>
+            <textarea class="chat-input" placeholder="Message FatherChat"></textarea>
+            <button class="send-btn">
+                <img src="assets/send.svg" alt="Send Icon" width="24">
+            </button>
+        </div>
+        <div class="info-text">
+            AI can make mistakes. Check important info.
+        </div>
+    </main>
+    <div class="settings-page" id="settings-page">
+        <h2>Settings</h2>
+        <form id="settings-form">
+            <label for="model-provider">Model Provider:</label>
+            <select id="model-provider" name="model-provider">
+                <option value="openai">OpenAI</option>
+                <option value="groq">Groq</option>
+            </select>
+            <label for="api-key">API Key:</label>
+            <input type="text" id="api-key" name="api-key">
+            <label for="api-host">API Host:</label>
+            <input type="text" id="api-host" name="api-host">
+            <label for="model">Model:</label>
+            <select id="model" name="model"></select>
+            <label for="temperature">Temperature:</label>
+            <input type="number" id="temperature" name="temperature" step="0.1" min="0" max="1">
+            <label for="top-p">Top P:</label>
+            <input type="number" id="top-p" name="top-p" step="0.1" min="0" max="1">
+            <label for="presence-penalty">Presence Penalty:</label>
+            <input type="number" id="presence-penalty" name="presence-penalty" step="0.1" min="0" max="1">
+            <label for="frequency-penalty">Frequency Penalty:</label>
+            <input type="number" id="frequency-penalty" name="frequency-penalty" step="0.1" min="0" max="1">
+            <div class="settings-buttons">
+                <button type="button" id="save-settings">Save</button>
+                <button type="button" id="cancel-settings">Cancel</button>
+                <button type="button" id="default-settings">Restore Defaults</button>
+            </div>
+        </form>
+    </div>
+    <div class="dim-background" id="dim-background"></div> <!-- Add this line -->
+</body>
+</html>
