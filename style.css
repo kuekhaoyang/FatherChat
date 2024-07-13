@@ -452,4 +452,7 @@ code {
   .sidebar .sidebar-btn {
     margin-bottom: 16px;
   }
+  .settings{
+    margin-bottom: 50px;
+  }
 }
