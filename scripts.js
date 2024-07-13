@@ -148,6 +148,24 @@ document.addEventListener('DOMContentLoaded', () => {
         settingsPage.classList.remove('open');
         dimBackground.classList.remove('active');
     }
+
+    function createCopyButton(codeBlock) {
+        const copyButton = document.createElement('button');
+        copyButton.textContent = 'Copy';
+        copyButton.className = 'copy-button';
+        copyButton.addEventListener('click', async () => {
+            try {
+                await navigator.clipboard.writeText(codeBlock.textContent);
+                copyButton.textContent = 'Copied!';
+                setTimeout(() => {
+                    copyButton.textContent = 'Copy';
+                }, 2000);
+            } catch (err) {
+                console.error('Failed to copy: ', err);
+            }
+        });
+        return copyButton;
+    }
   
     function displayMessage(content, sender) {
         const messageElement = document.createElement('div');
@@ -156,11 +174,18 @@ document.addEventListener('DOMContentLoaded', () => {
         if (sender === 'ai') {
             const renderedContent = marked.parse(content);
             messageElement.innerHTML = renderedContent;
-
+    
             messageElement.querySelectorAll('pre code').forEach((block) => {
                 hljs.highlightElement(block);
+                
+                // 添加复制按钮
+                const pre = block.parentNode;
+                if (!pre.querySelector('.copy-button')) {
+                    const copyButton = createCopyButton(block);
+                    pre.appendChild(copyButton);
+                }
             });
-
+    
             MathJax.typesetPromise([messageElement]).catch((err) => console.error(err.message));
         } else {
             messageElement.innerHTML = content;
@@ -305,6 +330,15 @@ document.addEventListener('DOMContentLoaded', () => {
                                 aiMessageElement.innerHTML = renderedContent;
     
                                 debouncedRender(aiMessageElement);
+
+                                // 为新添加的代码块添加复制按钮
+                                aiMessageElement.querySelectorAll('pre code').forEach((block) => {
+                                    const pre = block.parentNode;
+                                    if (!pre.querySelector('.copy-button')) {
+                                        const copyButton = createCopyButton(block);
+                                        pre.appendChild(copyButton);
+                                    }
+                                });
                             }
                         } catch (error) {
                             console.warn('Failed to parse JSON:', jsonLine, error);

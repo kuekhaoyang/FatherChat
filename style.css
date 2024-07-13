@@ -267,12 +267,31 @@ pre {
   border-radius: 4px;
   padding: 16px;
   overflow-x: auto;
+  position: relative;
 }
 
 code {
   font-family: 'Courier New', Courier, monospace;
   font-size: 14px;
   color: #d4d4d4;
+}
+
+.copy-button {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  padding: 5px 10px;
+  background-color: var(--secondary-color);
+  color: var(--text-color);
+  border: 1px solid var(--accent-color);
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+  transition: background-color 0.3s ease;
+}
+
+.copy-button:hover {
+  background-color: rgba(138, 180, 248, 0.1);
 }
 
 .hljs {
