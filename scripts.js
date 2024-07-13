@@ -2,6 +2,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const sidebar = document.querySelector('.sidebar');
     const toggleButton = document.getElementById('toggle-sidebar');
     const newChatButton = document.getElementById('new-chat');
+    const fatherChatButton = document.querySelector('.button');
     const settingsButton = document.getElementById('settings-btn');
     const settingsPage = document.getElementById('settings-page');
     const settingsForm = document.getElementById('settings-form');
@@ -43,6 +44,22 @@ document.addEventListener('DOMContentLoaded', () => {
     ];
   
     let uploadedFiles = [];
+
+    function startNewChat() {
+        chatMessages.innerHTML = '';
+        chatInput.value = '';
+        fileContainer.innerHTML = '';
+        fileContainer.style.display = 'none';
+        uploadedFiles = [];
+    }
+
+    function returnToHomePage() {
+        startNewChat();
+    }
+
+    newChatButton.addEventListener('click', startNewChat);
+
+    fatherChatButton.addEventListener('click', returnToHomePage);
   
     function populateModelDropdown(models) {
         modelSelect.innerHTML = '';
@@ -109,7 +126,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 hljs.highlightElement(block);
             });
 
-            // Render math expressions using MathJax
             MathJax.typesetPromise([messageElement]).catch((err) => console.error(err.message));
         } else {
             messageElement.innerHTML = content;
@@ -231,7 +247,6 @@ document.addEventListener('DOMContentLoaded', () => {
                                     hljs.highlightElement(block);
                                 });
 
-                                // Render math expressions using MathJax
                                 MathJax.typesetPromise([aiMessageElement]).catch((err) => console.error(err.message));
                             }
                         } catch (error) {
