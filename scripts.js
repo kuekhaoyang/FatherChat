@@ -138,6 +138,26 @@ document.addEventListener('DOMContentLoaded', () => {
         return messageElement;
     }
 
+    function debounce(func, wait) {
+        let timeout;
+        return function executedFunction(...args) {
+            const later = () => {
+                clearTimeout(timeout);
+                func(...args);
+            };
+            clearTimeout(timeout);
+            timeout = setTimeout(later, wait);
+        };
+    }
+
+    const debouncedRender = debounce((element) => {
+        requestAnimationFrame(() => {
+            element.querySelectorAll('pre code').forEach((block) => {
+                hljs.highlightElement(block);
+            });
+        });
+    }, 100);
+
     let chatHistory = [];
 
     async function sendMessage() {
@@ -169,7 +189,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     
         displayMessage(messageContent.innerHTML, 'user');
-
+    
         chatHistory.push({ role: "user", content: userMessage });
     
         chatInput.value = '';
@@ -178,7 +198,7 @@ document.addEventListener('DOMContentLoaded', () => {
         uploadedFiles = [];
     
         const settings = JSON.parse(localStorage.getItem('settings')) || defaultSettings;
-
+    
         const aiMessageElement = displayMessage('', 'ai');
     
         try {
@@ -247,12 +267,8 @@ document.addEventListener('DOMContentLoaded', () => {
                                 aiResponse += content;
                                 const renderedContent = marked.parse(aiResponse);
                                 aiMessageElement.innerHTML = renderedContent;
-
-                                aiMessageElement.querySelectorAll('pre code').forEach((block) => {
-                                    hljs.highlightElement(block);
-                                });
-
-                                MathJax.typesetPromise([aiMessageElement]).catch((err) => console.error(err.message));
+    
+                                debouncedRender(aiMessageElement);
                             }
                         } catch (error) {
                             console.warn('Failed to parse JSON:', jsonLine, error);
@@ -260,7 +276,10 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                 }
             }
-
+    
+            // Render MathJax after the full message is received
+            MathJax.typesetPromise([aiMessageElement]).catch((err) => console.error(err.message));
+    
             chatHistory.push({ role: "assistant", content: aiResponse });
     
         } catch (error) {

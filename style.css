@@ -256,7 +256,7 @@ body {
 }
 
 pre {
-  background-color: #f4f4f4;
+  background-color: #1e1e1e;
   border-radius: 4px;
   padding: 16px;
   overflow-x: auto;
@@ -265,11 +265,12 @@ pre {
 code {
   font-family: 'Courier New', Courier, monospace;
   font-size: 14px;
+  color: #d4d4d4;
 }
 
 .hljs {
-  background: #f4f4f4;
-  color: #333;
+  background: #1e1e1e;
+  color: #d4d4d4;
   padding: 0.5em;
   border-radius: 4px;
 }
