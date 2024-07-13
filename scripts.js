@@ -51,6 +51,7 @@ document.addEventListener('DOMContentLoaded', () => {
         fileContainer.innerHTML = '';
         fileContainer.style.display = 'none';
         uploadedFiles = [];
+        chatHistory = []; 
     }
 
     function returnToHomePage() {
@@ -136,7 +137,9 @@ document.addEventListener('DOMContentLoaded', () => {
         
         return messageElement;
     }
-  
+
+    let chatHistory = [];
+
     async function sendMessage() {
         const userMessage = chatInput.value.trim();
         if (userMessage === '' && uploadedFiles.length === 0) return;
@@ -166,6 +169,8 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     
         displayMessage(messageContent.innerHTML, 'user');
+
+        chatHistory.push({ role: "user", content: userMessage });
     
         chatInput.value = '';
         fileContainer.innerHTML = '';
@@ -173,27 +178,27 @@ document.addEventListener('DOMContentLoaded', () => {
         uploadedFiles = [];
     
         const settings = JSON.parse(localStorage.getItem('settings')) || defaultSettings;
-    
+
         const aiMessageElement = displayMessage('', 'ai');
     
         try {
             const messages = [
                 { role: "system", content: "You are a helpful assistant." },
-                { role: "user", content: [] }
+                ...chatHistory 
             ];
     
-            if (userMessage !== '') {
-                messages[1].content.push({ type: "text", text: userMessage });
-            }
-    
-            imageDataUrls.forEach(dataUrl => {
-                messages[1].content.push({
-                    type: "image_url",
-                    image_url: {
-                        url: dataUrl
-                    }
+            if (uploadedFiles.length > 0) {
+                messages.push({
+                    role: "user",
+                    content: [
+                        { type: "text", text: "I'm sending you some images. Please analyze them." },
+                        ...imageDataUrls.map(dataUrl => ({
+                            type: "image_url",
+                            image_url: { url: dataUrl }
+                        }))
+                    ]
                 });
-            });
+            }
     
             const response = await fetch(settings['api-host'] + '/chat/completions', {
                 method: 'POST',
@@ -255,6 +260,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                 }
             }
+
+            chatHistory.push({ role: "assistant", content: aiResponse });
     
         } catch (error) {
             console.error('Error:', error);
