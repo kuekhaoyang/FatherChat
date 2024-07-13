@@ -97,6 +97,40 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         localStorage.setItem('settings', JSON.stringify(settings));
     }
+
+    let initialHeight;
+
+    function setInitialHeight() {
+        chatInput.style.height = 'auto'; 
+        initialHeight = chatInput.scrollHeight;
+        chatInput.style.height = initialHeight + 'px';
+    }
+
+    function adjustInputHeight() {
+        chatInput.style.height = 'auto'; 
+        const scrollHeight = chatInput.scrollHeight;
+        
+        if (scrollHeight > initialHeight) {
+            const newHeight = Math.min(scrollHeight, window.innerHeight * 0.2);
+            chatInput.style.height = newHeight + 'px';
+        } else {
+            chatInput.style.height = initialHeight + 'px';
+        }
+    }
+
+    setInitialHeight(); 
+
+    chatInput.addEventListener('input', adjustInputHeight);
+
+    let resizeTimer;
+    window.addEventListener('resize', () => {
+        clearTimeout(resizeTimer);
+        resizeTimer = setTimeout(() => {
+            setInitialHeight();
+            adjustInputHeight();
+        }, 250); 
+    });
+
   
     function restoreDefaults() {
         for (const key in defaultSettings) {
