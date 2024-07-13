@@ -35,9 +35,14 @@
             <div id="chat-messages"></div>
             <!-- Chat messages will go here -->
         </div>
+        <!-- File container -->
+        <div class="file-container" id="file-container">
+            <!-- Uploaded files will appear here -->
+        </div>
         <div class="input-bar">
             <button class="attachment-btn">
                 <img src="assets/attachment-icon.svg" alt="Attachment Icon" width="24">
+                <input type="file" id="file-upload" multiple hidden>
             </button>
             <textarea class="chat-input" placeholder="Message FatherChat"></textarea>
             <button class="send-btn">
