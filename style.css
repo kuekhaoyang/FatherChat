@@ -255,6 +255,25 @@ body {
   color: var(--text-color);
 }
 
+pre {
+  background-color: #f4f4f4;
+  border-radius: 4px;
+  padding: 16px;
+  overflow-x: auto;
+}
+
+code {
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 14px;
+}
+
+.hljs {
+  background: #f4f4f4;
+  color: #333;
+  padding: 0.5em;
+  border-radius: 4px;
+}
+
 .file-container {
   display: none;
   flex-wrap: wrap;
@@ -263,7 +282,7 @@ body {
   margin: 0 0 16px 0;
   max-width: 100%;
   overflow-x: auto;
-  justify-content: center; /* 添加这一行 */
+  justify-content: center; 
 }
 
 .file-item {
@@ -275,8 +294,8 @@ body {
   border-radius: 4px;
   color: var(--text-color);
   position: relative;
-  justify-content: center; /* 新增的样式 */
-  text-align: center; /* 新增的样式 */
+  justify-content: center; 
+  text-align: center; 
 }
 
 .file-item img {

@@ -100,7 +100,18 @@ document.addEventListener('DOMContentLoaded', () => {
     function displayMessage(content, sender) {
         const messageElement = document.createElement('div');
         messageElement.classList.add('message', `${sender}-message`);
-        messageElement.innerHTML = content;
+        
+        if (sender === 'ai') {
+            const renderedContent = marked.parse(content);
+            messageElement.innerHTML = renderedContent;
+
+            messageElement.querySelectorAll('pre code').forEach((block) => {
+                hljs.highlightElement(block);
+            });
+        } else {
+            messageElement.innerHTML = content;
+        }
+        
         chatMessages.appendChild(messageElement);
         chatMessages.scrollTop = chatMessages.scrollHeight;
         return messageElement;
@@ -190,15 +201,14 @@ document.addEventListener('DOMContentLoaded', () => {
             const decoder = new TextDecoder();
             let buffer = '';
             let aiResponse = '';
-    
             while (true) {
                 const { done, value } = await reader.read();
                 if (done) break;
-    
+            
                 buffer += decoder.decode(value, { stream: true });
                 const lines = buffer.split('\n');
                 buffer = lines.pop();
-    
+            
                 for (const line of lines) {
                     if (line.startsWith('data: ')) {
                         const jsonLine = line.slice(6).trim();
@@ -210,7 +220,12 @@ document.addEventListener('DOMContentLoaded', () => {
                             const content = jsonData.choices[0].delta.content;
                             if (content) {
                                 aiResponse += content;
-                                aiMessageElement.innerHTML = aiResponse.replace(/\n/g, '<br>');
+                                const renderedContent = marked.parse(aiResponse);
+                                aiMessageElement.innerHTML = renderedContent;
+
+                                aiMessageElement.querySelectorAll('pre code').forEach((block) => {
+                                    hljs.highlightElement(block);
+                                });
                             }
                         } catch (error) {
                             console.warn('Failed to parse JSON:', jsonLine, error);
