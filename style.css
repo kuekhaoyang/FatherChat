@@ -186,17 +186,17 @@ body {
 
 .settings-buttons button {
   padding: 8px 16px;
-  background-color: var(--accent-color);
-  border: none;
+  background-color: transparent;
+  border: 1px solid var(--accent-color);
   border-radius: 4px;
   cursor: pointer;
-  color: var(--primary-color);
+  color: var(--accent-color);
   font-weight: bold;
   transition: background-color 0.3s ease;
 }
 
 .settings-buttons button:hover {
-  background-color: #6a9ef8;
+  background-color: rgba(138, 180, 248, 0.1);
 }
 
 .settings-buttons button#cancel-settings {

@@ -108,12 +108,16 @@ document.addEventListener('DOMContentLoaded', () => {
             messageElement.querySelectorAll('pre code').forEach((block) => {
                 hljs.highlightElement(block);
             });
+
+            // Render math expressions using MathJax
+            MathJax.typesetPromise([messageElement]).catch((err) => console.error(err.message));
         } else {
             messageElement.innerHTML = content;
         }
         
         chatMessages.appendChild(messageElement);
         chatMessages.scrollTop = chatMessages.scrollHeight;
+        
         return messageElement;
     }
   
@@ -226,6 +230,9 @@ document.addEventListener('DOMContentLoaded', () => {
                                 aiMessageElement.querySelectorAll('pre code').forEach((block) => {
                                     hljs.highlightElement(block);
                                 });
+
+                                // Render math expressions using MathJax
+                                MathJax.typesetPromise([aiMessageElement]).catch((err) => console.error(err.message));
                             }
                         } catch (error) {
                             console.warn('Failed to parse JSON:', jsonLine, error);
@@ -240,108 +247,108 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-function handleFileUpload(event) {
-    const files = event.target.files;
-    if (files.length > 0) {
-        fileContainer.style.display = 'flex';
-    }
+    function handleFileUpload(event) {
+        const files = event.target.files;
+        if (files.length > 0) {
+            fileContainer.style.display = 'flex';
+        }
 
-    Array.from(files).forEach(file => {
-        const fileItem = document.createElement('div');
-        fileItem.classList.add('file-item');
+        Array.from(files).forEach(file => {
+            const fileItem = document.createElement('div');
+            fileItem.classList.add('file-item');
 
-        const img = document.createElement('img');
-        img.src = URL.createObjectURL(file);
-        img.onload = () => URL.revokeObjectURL(img.src);
+            const img = document.createElement('img');
+            img.src = URL.createObjectURL(file);
+            img.onload = () => URL.revokeObjectURL(img.src);
 
-        const removeFileButton = document.createElement('button');
-        removeFileButton.classList.add('remove-file');
-        removeFileButton.textContent = 'X';
-        removeFileButton.addEventListener('click', () => {
-            fileItem.remove();
-            uploadedFiles = uploadedFiles.filter(f => f !== file);
-            if (fileContainer.children.length === 0) {
-                fileContainer.style.display = 'none';
-            }
+            const removeFileButton = document.createElement('button');
+            removeFileButton.classList.add('remove-file');
+            removeFileButton.textContent = 'X';
+            removeFileButton.addEventListener('click', () => {
+                fileItem.remove();
+                uploadedFiles = uploadedFiles.filter(f => f !== file);
+                if (fileContainer.children.length === 0) {
+                    fileContainer.style.display = 'none';
+                }
+            });
+
+            fileItem.appendChild(img);
+            fileItem.appendChild(removeFileButton);
+
+            fileContainer.appendChild(fileItem);
+            uploadedFiles.push(file);
         });
 
-        fileItem.appendChild(img);
-        fileItem.appendChild(removeFileButton);
+        fileUpload.value = '';
+    }
 
-        fileContainer.appendChild(fileItem);
-        uploadedFiles.push(file);
+    function showFullsizeImage(src) {
+        const fullsizeContainer = document.createElement('div');
+        fullsizeContainer.classList.add('fullsize-image');
+        const img = document.createElement('img');
+        img.src = src;
+        fullsizeContainer.appendChild(img);
+        document.body.appendChild(fullsizeContainer);
+
+        fullsizeContainer.addEventListener('click', () => {
+            fullsizeContainer.remove();
+        });
+    }
+
+    toggleButton.addEventListener('click', () => {
+        sidebar.classList.toggle('closed');
+        toggleButton.setAttribute('data-tooltip', sidebar.classList.contains('closed') ? 'Open Sidebar' : 'Close Sidebar');
     });
 
-    fileUpload.value = '';
-}
-
-function showFullsizeImage(src) {
-    const fullsizeContainer = document.createElement('div');
-    fullsizeContainer.classList.add('fullsize-image');
-    const img = document.createElement('img');
-    img.src = src;
-    fullsizeContainer.appendChild(img);
-    document.body.appendChild(fullsizeContainer);
-
-    fullsizeContainer.addEventListener('click', () => {
-        fullsizeContainer.remove();
+    newChatButton.addEventListener('mouseenter', () => {
+        newChatButton.setAttribute('data-tooltip', 'New Chat');
     });
-}
 
-toggleButton.addEventListener('click', () => {
-    sidebar.classList.toggle('closed');
-    toggleButton.setAttribute('data-tooltip', sidebar.classList.contains('closed') ? 'Open Sidebar' : 'Close Sidebar');
-});
+    settingsButton.addEventListener('click', () => {
+        settingsPage.classList.add('open');
+        dimBackground.classList.add('active');
+        loadSettings();
+    });
 
-newChatButton.addEventListener('mouseenter', () => {
-    newChatButton.setAttribute('data-tooltip', 'New Chat');
-});
+    saveButton.addEventListener('click', () => {
+        saveSettings();
+        closeSettings();
+    });
 
-settingsButton.addEventListener('click', () => {
-    settingsPage.classList.add('open');
-    dimBackground.classList.add('active');
-    loadSettings();
-});
+    cancelButton.addEventListener('click', () => {
+        closeSettings();
+    });
 
-saveButton.addEventListener('click', () => {
-    saveSettings();
-    closeSettings();
-});
+    defaultButton.addEventListener('click', () => {
+        restoreDefaults();
+    });
 
-cancelButton.addEventListener('click', () => {
-    closeSettings();
-});
+    modelProviderSelect.addEventListener('change', (event) => {
+        const apiHostInput = settingsForm.elements['api-host'];
+        if (event.target.value === 'openai') {
+            apiHostInput.value = 'https://api.openai.com/v1';
+            populateModelDropdown(openAIModels);
+        } else if (event.target.value === 'groq') {
+            apiHostInput.value = 'https://api.groq.com/openai/v1';
+            populateModelDropdown(groqModels);
+        }
+    });
 
-defaultButton.addEventListener('click', () => {
-    restoreDefaults();
-});
+    dimBackground.addEventListener('click', () => {
+        closeSettings();
+    });
 
-modelProviderSelect.addEventListener('change', (event) => {
-    const apiHostInput = settingsForm.elements['api-host'];
-    if (event.target.value === 'openai') {
-        apiHostInput.value = 'https://api.openai.com/v1';
-        populateModelDropdown(openAIModels);
-    } else if (event.target.value === 'groq') {
-        apiHostInput.value = 'https://api.groq.com/openai/v1';
-        populateModelDropdown(groqModels);
-    }
-});
+    sendButton.addEventListener('click', sendMessage);
+    chatInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            sendMessage();
+        }
+    });
 
-dimBackground.addEventListener('click', () => {
-    closeSettings();
-});
+    const attachmentButton = document.querySelector('.attachment-btn');
+    attachmentButton.addEventListener('click', () => fileUpload.click());
+    fileUpload.addEventListener('change', handleFileUpload);
 
-sendButton.addEventListener('click', sendMessage);
-chatInput.addEventListener('keypress', (e) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-        e.preventDefault();
-        sendMessage();
-    }
-});
-
-const attachmentButton = document.querySelector('.attachment-btn');
-attachmentButton.addEventListener('click', () => fileUpload.click());
-fileUpload.addEventListener('change', handleFileUpload);
-
-populateModelDropdown(openAIModels);
+    populateModelDropdown(openAIModels);
 });
