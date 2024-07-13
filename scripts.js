@@ -190,8 +190,6 @@ document.addEventListener('DOMContentLoaded', () => {
     
         displayMessage(messageContent.innerHTML, 'user');
     
-        chatHistory.push({ role: "user", content: userMessage });
-    
         chatInput.value = '';
         fileContainer.innerHTML = '';
         fileContainer.style.display = 'none';
@@ -204,21 +202,25 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             const messages = [
                 { role: "system", content: "You are a helpful assistant." },
-                ...chatHistory 
+                ...chatHistory,
+                { role: "user", content: [] }
             ];
     
-            if (uploadedFiles.length > 0) {
-                messages.push({
-                    role: "user",
-                    content: [
-                        { type: "text", text: "I'm sending you some images. Please analyze them." },
-                        ...imageDataUrls.map(dataUrl => ({
-                            type: "image_url",
-                            image_url: { url: dataUrl }
-                        }))
-                    ]
+            if (userMessage !== '') {
+                messages[messages.length - 1].content.push({ type: "text", text: userMessage });
+            }
+    
+            if (imageDataUrls.length > 0) {
+                messages[messages.length - 1].content.push({ type: "text", text: "I'm sending you some images. Please analyze them." });
+                imageDataUrls.forEach(dataUrl => {
+                    messages[messages.length - 1].content.push({
+                        type: "image_url",
+                        image_url: { url: dataUrl }
+                    });
                 });
             }
+    
+            chatHistory.push({ role: "user", content: messages[messages.length - 1].content });
     
             const response = await fetch(settings['api-host'] + '/chat/completions', {
                 method: 'POST',
@@ -277,10 +279,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             }
     
-            // Render MathJax after the full message is received
-            MathJax.typesetPromise([aiMessageElement]).catch((err) => console.error(err.message));
-    
             chatHistory.push({ role: "assistant", content: aiResponse });
+
+            MathJax.typesetPromise([aiMessageElement]).catch((err) => console.error(err.message));
     
         } catch (error) {
             console.error('Error:', error);
