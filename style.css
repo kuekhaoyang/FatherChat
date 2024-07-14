@@ -102,6 +102,7 @@ body {
 }
 
 .settings-page textarea {
+  width: auto;
   border-radius: 10px;
   padding: 8px;
   margin-top: 8px;
