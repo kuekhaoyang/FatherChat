@@ -388,6 +388,45 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    function handlePaste(event) {
+        const items = (event.clipboardData || event.originalEvent.clipboardData).items;
+        for (const item of items) {
+            if (item.type.indexOf('image') !== -1) {
+                event.preventDefault();
+                const blob = item.getAsFile();
+                handlePastedFile(blob);
+            }
+        }
+    }
+
+    function handlePastedFile(file) {
+        fileContainer.style.display = 'flex';
+
+        const fileItem = document.createElement('div');
+        fileItem.classList.add('file-item');
+
+        const img = document.createElement('img');
+        img.src = URL.createObjectURL(file);
+        img.onload = () => URL.revokeObjectURL(img.src);
+
+        const removeFileButton = document.createElement('button');
+        removeFileButton.classList.add('remove-file');
+        removeFileButton.textContent = 'X';
+        removeFileButton.addEventListener('click', () => {
+            fileItem.remove();
+            uploadedFiles = uploadedFiles.filter(f => f !== file);
+            if (fileContainer.children.length === 0) {
+                fileContainer.style.display = 'none';
+            }
+        });
+
+        fileItem.appendChild(img);
+        fileItem.appendChild(removeFileButton);
+
+        fileContainer.appendChild(fileItem);
+        uploadedFiles.push(file);
+    }
+
     function handleFileUpload(event) {
         const files = event.target.files;
         if (files.length > 0) {
@@ -480,6 +519,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     sendButton.addEventListener('click', sendMessage);
+    chatInput.addEventListener('paste', handlePaste);
     chatInput.addEventListener('keypress', (e) => {
         if (e.key === 'Enter' && !e.shiftKey) {
             e.preventDefault();
