@@ -155,7 +155,8 @@ document.addEventListener('DOMContentLoaded', () => {
         copyButton.className = 'copy-button';
         copyButton.addEventListener('click', async () => {
             try {
-                await navigator.clipboard.writeText(codeBlock.textContent);
+                const originalText = codeBlock.getAttribute('data-original-text') || codeBlock.textContent;
+                await navigator.clipboard.writeText(originalText);
                 copyButton.textContent = 'Copied!';
                 setTimeout(() => {
                     copyButton.textContent = 'Copy';
@@ -167,17 +168,17 @@ document.addEventListener('DOMContentLoaded', () => {
         return copyButton;
     }
 
-    function createMessageCopyButton(messageContent) {
+    function createMessageCopyButton(messageContent, originalContent) {
         const copyButton = document.createElement('button');
         copyButton.className = 'message-copy-button';
         const copyIcon = document.createElement('img');
         copyIcon.src = 'assets/copy.svg';
         copyIcon.alt = 'Copy Icon';
         copyButton.appendChild(copyIcon);
-
+    
         copyButton.addEventListener('click', async () => {
             try {
-                await navigator.clipboard.writeText(messageContent.textContent);
+                await navigator.clipboard.writeText(originalContent);
                 copyIcon.src = 'assets/copied.svg';
                 setTimeout(() => {
                     copyIcon.src = 'assets/copy.svg';
@@ -189,7 +190,7 @@ document.addEventListener('DOMContentLoaded', () => {
         return copyButton;
     }
   
-    function displayMessage(content, sender) {
+    function displayMessage(content, sender, originalContent) {
         const messageElement = document.createElement('div');
         messageElement.classList.add('message', `${sender}-message`);
         
@@ -199,7 +200,8 @@ document.addEventListener('DOMContentLoaded', () => {
     
             messageElement.querySelectorAll('pre code').forEach((block) => {
                 hljs.highlightElement(block);
-
+                block.setAttribute('data-original-text', block.textContent);
+    
                 const pre = block.parentNode;
                 if (!pre.querySelector('.copy-button')) {
                     const copyButton = createCopyButton(block);
@@ -211,8 +213,8 @@ document.addEventListener('DOMContentLoaded', () => {
         } else {
             messageElement.innerHTML = content;
         }
-
-        const copyButton = createMessageCopyButton(messageElement);
+    
+        const copyButton = createMessageCopyButton(messageElement, originalContent || content);
         messageElement.appendChild(copyButton);
         
         chatMessages.appendChild(messageElement);
@@ -271,7 +273,7 @@ document.addEventListener('DOMContentLoaded', () => {
             messageContent.appendChild(img);
         });
     
-        const userMessageElement = displayMessage(messageContent.innerHTML, 'user');
+        const userMessageElement = displayMessage(messageContent.innerHTML, 'user', userMessage);
     
         chatInput.value = '';
         fileContainer.innerHTML = '';
@@ -358,13 +360,14 @@ document.addEventListener('DOMContentLoaded', () => {
                                 aiMessageElement.querySelectorAll('pre code').forEach((block) => {
                                     const pre = block.parentNode;
                                     if (!pre.querySelector('.copy-button')) {
+                                        block.setAttribute('data-original-text', block.textContent);
                                         const copyButton = createCopyButton(block);
                                         pre.appendChild(copyButton);
                                     }
                                 });
     
                                 if (!aiMessageElement.querySelector('.message-copy-button')) {
-                                    const copyButton = createMessageCopyButton(aiMessageElement);
+                                    const copyButton = createMessageCopyButton(aiMessageElement, aiResponse);
                                     aiMessageElement.appendChild(copyButton);
                                 }
                             }
