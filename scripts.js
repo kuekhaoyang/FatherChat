@@ -26,7 +26,8 @@ document.addEventListener('DOMContentLoaded', () => {
         'temperature': 0.7,
         'top-p': 1.0,
         'presence-penalty': 0.0,
-        'frequency-penalty': 0.0
+        'frequency-penalty': 0.0,
+        'system-prompt': 'You are a helpful assistant.'
     };
   
     const openAIModels = [
@@ -81,8 +82,11 @@ document.addEventListener('DOMContentLoaded', () => {
                     if (key === 'model-provider') {
                         element.value = settings[key];
                         element.dispatchEvent(new Event('change'));
+                    } else if (key === 'system-prompt') {
+                        element.value = settings[key];
+                    } else {
+                        element.value = settings[key];
                     }
-                    element.value = settings[key];
                 }
             }
         }
@@ -137,11 +141,17 @@ document.addEventListener('DOMContentLoaded', () => {
             if (defaultSettings.hasOwnProperty(key)) {
                 const element = settingsForm.elements[key];
                 if (element) {
-                    element.value = defaultSettings[key];
+                    if (key === 'model-provider') {
+                        element.value = defaultSettings[key];
+                        element.dispatchEvent(new Event('change'));
+                    } else if (key === 'system-prompt') {
+                        element.value = defaultSettings[key];
+                    } else {
+                        element.value = defaultSettings[key];
+                    }
                 }
             }
         }
-        modelProviderSelect.dispatchEvent(new Event('change'));
     }
   
     function closeSettings() {
@@ -286,7 +296,7 @@ document.addEventListener('DOMContentLoaded', () => {
     
         try {
             const messages = [
-                { role: "system", content: "You are a helpful assistant." },
+                { role: "system", content: settings['system-prompt'] },
                 ...chatHistory,
                 { role: "user", content: [] }
             ];
