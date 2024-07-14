@@ -319,6 +319,23 @@ code {
   border-radius: 4px;
 }
 
+@keyframes breathing {
+  0% { transform: scale(0.9); }
+  50% { transform: scale(1.1); }
+  100% { transform: scale(0.9); }
+}
+
+.breathing-circle {
+  width: 12px;
+  height: 12px;
+  background-color: white;
+  border-radius: 50%;
+  display: inline-block;
+  animation: breathing 1.5s ease-in-out infinite;
+  margin-left: 5px;
+  vertical-align: middle;
+}
+
 .message-copy-button {
   background-color: transparent;
   border: none;

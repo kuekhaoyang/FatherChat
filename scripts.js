@@ -205,25 +205,16 @@ document.addEventListener('DOMContentLoaded', () => {
         messageElement.classList.add('message', `${sender}-message`);
         
         if (sender === 'ai') {
-            const renderedContent = marked.parse(content);
-            messageElement.innerHTML = renderedContent;
-    
-            messageElement.querySelectorAll('pre code').forEach((block) => {
-                hljs.highlightElement(block);
-                block.setAttribute('data-original-text', block.textContent);
-    
-                const pre = block.parentNode;
-                if (!pre.querySelector('.copy-button')) {
-                    const copyButton = createCopyButton(block);
-                    pre.appendChild(copyButton);
-                }
-            });
-    
-            MathJax.typesetPromise([messageElement]).catch((err) => console.error(err.message));
+            messageElement.innerHTML = '<div class="ai-content"></div>';
+            const aiContent = messageElement.querySelector('.ai-content');
+            
+            const waitingAnimation = document.createElement('span');
+            waitingAnimation.classList.add('breathing-circle');
+            aiContent.appendChild(waitingAnimation);
         } else {
             messageElement.innerHTML = content;
         }
-    
+        
         const copyButton = createMessageCopyButton(messageElement, originalContent || content);
         messageElement.appendChild(copyButton);
         
@@ -293,6 +284,9 @@ document.addEventListener('DOMContentLoaded', () => {
         const settings = JSON.parse(localStorage.getItem('settings')) || defaultSettings;
     
         const aiMessageElement = displayMessage('', 'ai');
+        const aiContent = aiMessageElement.querySelector('.ai-content');
+        const waitingAnimation = aiContent.querySelector('.breathing-circle');
+    
     
         try {
             const messages = [
@@ -361,9 +355,13 @@ document.addEventListener('DOMContentLoaded', () => {
                             const jsonData = JSON.parse(jsonLine);
                             const content = jsonData.choices[0].delta.content;
                             if (content) {
+                                if (aiResponse === '') {
+                                    aiContent.innerHTML = '';
+                                }
                                 aiResponse += content;
                                 const renderedContent = marked.parse(aiResponse);
-                                aiMessageElement.innerHTML = renderedContent;
+                                aiContent.innerHTML = renderedContent;
+                                aiContent.appendChild(waitingAnimation);
     
                                 debouncedRender(aiMessageElement);
     
@@ -388,13 +386,16 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             }
     
+            waitingAnimation.remove();
+    
             chatHistory.push({ role: "assistant", content: aiResponse });
     
             MathJax.typesetPromise([aiMessageElement]).catch((err) => console.error(err.message));
     
         } catch (error) {
             console.error('Error:', error);
-            aiMessageElement.textContent = 'An error occurred while processing your request.';
+            aiContent.textContent = 'An error occurred while processing your request.';
+            waitingAnimation.remove();
         }
     }
 
