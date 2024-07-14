@@ -166,6 +166,28 @@ document.addEventListener('DOMContentLoaded', () => {
         });
         return copyButton;
     }
+
+    function createMessageCopyButton(messageContent) {
+        const copyButton = document.createElement('button');
+        copyButton.className = 'message-copy-button';
+        const copyIcon = document.createElement('img');
+        copyIcon.src = 'assets/copy.svg';
+        copyIcon.alt = 'Copy Icon';
+        copyButton.appendChild(copyIcon);
+
+        copyButton.addEventListener('click', async () => {
+            try {
+                await navigator.clipboard.writeText(messageContent.textContent);
+                copyIcon.src = 'assets/copied.svg';
+                setTimeout(() => {
+                    copyIcon.src = 'assets/copy.svg';
+                }, 2000);
+            } catch (err) {
+                console.error('Failed to copy: ', err);
+            }
+        });
+        return copyButton;
+    }
   
     function displayMessage(content, sender) {
         const messageElement = document.createElement('div');
@@ -177,8 +199,7 @@ document.addEventListener('DOMContentLoaded', () => {
     
             messageElement.querySelectorAll('pre code').forEach((block) => {
                 hljs.highlightElement(block);
-                
-                // 添加复制按钮
+
                 const pre = block.parentNode;
                 if (!pre.querySelector('.copy-button')) {
                     const copyButton = createCopyButton(block);
@@ -190,6 +211,9 @@ document.addEventListener('DOMContentLoaded', () => {
         } else {
             messageElement.innerHTML = content;
         }
+
+        const copyButton = createMessageCopyButton(messageElement);
+        messageElement.appendChild(copyButton);
         
         chatMessages.appendChild(messageElement);
         chatMessages.scrollTop = chatMessages.scrollHeight;
@@ -247,7 +271,7 @@ document.addEventListener('DOMContentLoaded', () => {
             messageContent.appendChild(img);
         });
     
-        displayMessage(messageContent.innerHTML, 'user');
+        const userMessageElement = displayMessage(messageContent.innerHTML, 'user');
     
         chatInput.value = '';
         fileContainer.innerHTML = '';
@@ -310,11 +334,11 @@ document.addEventListener('DOMContentLoaded', () => {
             while (true) {
                 const { done, value } = await reader.read();
                 if (done) break;
-            
+    
                 buffer += decoder.decode(value, { stream: true });
                 const lines = buffer.split('\n');
                 buffer = lines.pop();
-            
+    
                 for (const line of lines) {
                     if (line.startsWith('data: ')) {
                         const jsonLine = line.slice(6).trim();
@@ -330,8 +354,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                 aiMessageElement.innerHTML = renderedContent;
     
                                 debouncedRender(aiMessageElement);
-
-                                // 为新添加的代码块添加复制按钮
+    
                                 aiMessageElement.querySelectorAll('pre code').forEach((block) => {
                                     const pre = block.parentNode;
                                     if (!pre.querySelector('.copy-button')) {
@@ -339,6 +362,11 @@ document.addEventListener('DOMContentLoaded', () => {
                                         pre.appendChild(copyButton);
                                     }
                                 });
+    
+                                if (!aiMessageElement.querySelector('.message-copy-button')) {
+                                    const copyButton = createMessageCopyButton(aiMessageElement);
+                                    aiMessageElement.appendChild(copyButton);
+                                }
                             }
                         } catch (error) {
                             console.warn('Failed to parse JSON:', jsonLine, error);
@@ -348,7 +376,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
     
             chatHistory.push({ role: "assistant", content: aiResponse });
-
+    
             MathJax.typesetPromise([aiMessageElement]).catch((err) => console.error(err.message));
     
         } catch (error) {
