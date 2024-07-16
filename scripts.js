@@ -17,7 +17,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const chatMessages = document.getElementById('chat-messages');
     const fileUpload = document.getElementById('file-upload');
     const fileContainer = document.getElementById('file-container');
-  
+    const scrollDownBtn = document.getElementById('scroll-down-btn');
+    const chatArea = document.querySelector('.chat-area');
+
     const defaultSettings = {
         'model-provider': 'openai',
         'api-key': '',
@@ -53,6 +55,8 @@ document.addEventListener('DOMContentLoaded', () => {
         fileContainer.style.display = 'none';
         uploadedFiles = [];
         chatHistory = []; 
+        scrollDownBtn.style.display = 'none'; 
+        toggleScrollDownButton(); 
     }
 
     function returnToHomePage() {
@@ -178,7 +182,7 @@ document.addEventListener('DOMContentLoaded', () => {
         return copyButton;
     }
 
-    function createMessageCopyButton(messageContent, originalContent) {
+    function createMessageCopyButton(messageElement, originalContent) {
         const copyButton = document.createElement('button');
         copyButton.className = 'message-copy-button';
         const copyIcon = document.createElement('img');
@@ -188,7 +192,14 @@ document.addEventListener('DOMContentLoaded', () => {
     
         copyButton.addEventListener('click', async () => {
             try {
-                await navigator.clipboard.writeText(originalContent);
+                let contentToCopy;
+                if (messageElement.classList.contains('user-message')) {
+                    contentToCopy = originalContent;
+                } else if (messageElement.classList.contains('ai-message')) {
+                    contentToCopy = messageElement.getAttribute('data-original-content') || messageElement.querySelector('.ai-content').textContent;
+                }
+                
+                await navigator.clipboard.writeText(contentToCopy);
                 copyIcon.src = 'assets/copied.svg';
                 setTimeout(() => {
                     copyIcon.src = 'assets/copy.svg';
@@ -199,7 +210,30 @@ document.addEventListener('DOMContentLoaded', () => {
         });
         return copyButton;
     }
-  
+
+    function toggleScrollDownButton() {
+        const { scrollTop, scrollHeight, clientHeight } = chatArea;
+        const isScrolledToBottom = scrollTop + clientHeight >= scrollHeight - 10;
+        const hasOverflow = scrollHeight > clientHeight;
+
+        scrollDownBtn.style.display = (!isScrolledToBottom && hasOverflow) ? 'flex' : 'none';
+    }
+
+    function scrollToBottom() {
+        const lastMessage = chatMessages.lastElementChild;
+        if (lastMessage) {
+            lastMessage.scrollIntoView({ behavior: 'smooth', block: 'end' });
+        } else {
+            chatArea.scrollTo({
+                top: chatArea.scrollHeight,
+                behavior: 'smooth'
+            });
+        }
+    }
+
+    chatArea.addEventListener('scroll', toggleScrollDownButton);
+    scrollDownBtn.addEventListener('click', scrollToBottom);
+
     function displayMessage(content, sender, originalContent) {
         const messageElement = document.createElement('div');
         messageElement.classList.add('message', `${sender}-message`);
@@ -211,6 +245,8 @@ document.addEventListener('DOMContentLoaded', () => {
             const waitingAnimation = document.createElement('span');
             waitingAnimation.classList.add('breathing-circle');
             aiContent.appendChild(waitingAnimation);
+
+            messageElement.setAttribute('data-original-content', originalContent);
         } else {
             messageElement.innerHTML = content;
         }
@@ -219,6 +255,7 @@ document.addEventListener('DOMContentLoaded', () => {
         messageElement.appendChild(copyButton);
         
         chatMessages.appendChild(messageElement);
+        toggleScrollDownButton();
         chatMessages.scrollTop = chatMessages.scrollHeight;
         
         return messageElement;
@@ -362,7 +399,8 @@ document.addEventListener('DOMContentLoaded', () => {
                                 const renderedContent = marked.parse(aiResponse);
                                 aiContent.innerHTML = renderedContent;
                                 aiContent.appendChild(waitingAnimation);
-    
+                                toggleScrollDownButton();
+
                                 debouncedRender(aiMessageElement);
     
                                 aiMessageElement.querySelectorAll('pre code').forEach((block) => {
@@ -373,7 +411,9 @@ document.addEventListener('DOMContentLoaded', () => {
                                         pre.appendChild(copyButton);
                                     }
                                 });
-    
+
+                                aiMessageElement.setAttribute('data-original-content', aiResponse);
+
                                 if (!aiMessageElement.querySelector('.message-copy-button')) {
                                     const copyButton = createMessageCopyButton(aiMessageElement, aiResponse);
                                     aiMessageElement.appendChild(copyButton);

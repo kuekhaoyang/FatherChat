@@ -262,6 +262,34 @@ body {
   position: relative;
 }
 
+.scroll-down-btn {
+  position: absolute;
+  top: -40px;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: var(--secondary-color);
+  border: none;
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+}
+
+.scroll-down-btn:hover {
+  background-color: var(--accent-color);
+}
+
+.scroll-down-btn img {
+  width: 20px;
+  height: 20px;
+  filter: brightness(0) invert(1);
+}
+
 .chat-input {
   flex: 1;
   max-width: 600px; 
