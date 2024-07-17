@@ -5,7 +5,8 @@
   --text-color: #FFFFFF;
   --font-family: 'Arial, sans-serif';
   --font-size: 16px;
-  --main-content-bg-color: #202124; 
+  --table-border-color: #444; 
+  --table-header-bg: #333; 
 }
 
 body {
@@ -243,7 +244,7 @@ body {
   flex-direction: column;
   box-sizing: border-box;
   overflow-y: auto;
-  background-color: var(--main-content-bg-color);
+  background-color: var(--primary-color);
 }
 
 .chat-area {
@@ -477,7 +478,7 @@ code {
 
 .sidebar.closed {
   width: 60px;
-  background-color: var(--main-content-bg-color);
+  background-color: var(--primary-color);
 }
 
 .sidebar.closed .button, .sidebar.closed .settings, .sidebar.closed .button span, .sidebar.closed .settings span {
@@ -507,6 +508,40 @@ code {
   align-self: flex-start;
   background-color: #3C4043;
   color: #FFFFFF;
+}
+
+.message table {
+  border-collapse: collapse;
+  width: 100%;
+  margin: 1em 0;
+  font-size: 0.9em;
+  border: 1px solid var(--table-border-color);
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.15);
+}
+
+.message th,
+.message td {
+  padding: 12px 15px;
+  text-align: left;
+  border: 1px solid var(--table-border-color);
+}
+
+.message thead tr {
+  background-color: var(--table-header-bg);
+  color: var(--accent-color);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-weight: bold;
+}
+
+.message tbody tr:nth-of-type(even) {
+  background-color: var(--secondary-color);
+}
+
+.message tbody tr:last-of-type {
+  border-bottom: 2px solid var(--accent-color);
 }
 
 .user-message img {
