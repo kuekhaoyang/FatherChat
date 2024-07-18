@@ -281,6 +281,14 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }, 100);
 
+    function preprocessLatex(content) {
+        // Convert \( \) to single dollar signs
+        content = content.replace(/\\\((.*?)\\\)/g, '$$$1$');
+        // Convert \[ \] to double dollar signs
+        content = content.replace(/\\\[(.*?)\\\]/g, '$$$$ $1 $$$$');
+        return content;
+    }
+
     let chatHistory = [];
 
     async function sendMessage() {
@@ -337,7 +345,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
     
             if (imageDataUrls.length > 0) {
-                messages[messages.length - 1].content.push({ type: "text", text: "I'm sending you some images. Please analyze them." });
+                messages[messages.length - 1].content.push({ type: "text", text: userMessage });
                 imageDataUrls.forEach(dataUrl => {
                     messages[messages.length - 1].content.push({
                         type: "image_url",
@@ -377,11 +385,11 @@ document.addEventListener('DOMContentLoaded', () => {
             while (true) {
                 const { done, value } = await reader.read();
                 if (done) break;
-    
+
                 buffer += decoder.decode(value, { stream: true });
                 const lines = buffer.split('\n');
                 buffer = lines.pop();
-    
+
                 for (const line of lines) {
                     if (line.startsWith('data: ')) {
                         const jsonLine = line.slice(6).trim();
@@ -396,13 +404,14 @@ document.addEventListener('DOMContentLoaded', () => {
                                     aiContent.innerHTML = '';
                                 }
                                 aiResponse += content;
-                                const renderedContent = marked.parse(aiResponse);
+                                const preprocessedContent = preprocessLatex(aiResponse);
+                                const renderedContent = marked.parse(preprocessedContent);
                                 aiContent.innerHTML = renderedContent;
                                 aiContent.appendChild(waitingAnimation);
                                 toggleScrollDownButton();
 
                                 debouncedRender(aiMessageElement);
-    
+
                                 aiMessageElement.querySelectorAll('pre code').forEach((block) => {
                                     const pre = block.parentNode;
                                     if (!pre.querySelector('.copy-button')) {
@@ -425,13 +434,13 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                 }
             }
-    
+
             waitingAnimation.remove();
-    
+
             chatHistory.push({ role: "assistant", content: aiResponse });
-    
+
             MathJax.typesetPromise([aiMessageElement]).catch((err) => console.error(err.message));
-    
+
         } catch (error) {
             console.error('Error:', error);
             aiContent.textContent = 'An error occurred while processing your request.';
