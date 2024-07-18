@@ -279,12 +279,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 hljs.highlightElement(block);
             });
         });
-    }, 100);
+    }, 500);
 
     function preprocessLatex(content) {
-        // Convert \( \) to single dollar signs
         content = content.replace(/\\\((.*?)\\\)/g, '$$$1$');
-        // Convert \[ \] to double dollar signs
         content = content.replace(/\\\[(.*?)\\\]/g, '$$$$ $1 $$$$');
         return content;
     }
