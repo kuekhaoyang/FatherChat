@@ -20,6 +20,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const scrollDownBtn = document.getElementById('scroll-down-btn');
     const chatArea = document.querySelector('.chat-area');
 
+    let isGenerating = false;
+
     const defaultSettings = {
         'model-provider': 'openai',
         'api-key': '',
@@ -287,11 +289,28 @@ document.addEventListener('DOMContentLoaded', () => {
         return content;
     }
 
+    function disableSendInterface() {
+        sendButton.disabled = true;
+        sendButton.classList.add('disabled');
+        isGenerating = true;
+    }
+
+    function enableSendInterface() {
+        sendButton.disabled = false;
+        sendButton.classList.remove('disabled');
+        isGenerating = false;
+    }
+
     let chatHistory = [];
 
     async function sendMessage() {
+        if (isGenerating) return;
+        
         const userMessage = chatInput.value.trim();
         if (userMessage === '' && uploadedFiles.length === 0) return;
+
+        disableSendInterface();
+        isGenerating = true;
     
         const messageContent = document.createElement('div');
         if (userMessage !== '') {
@@ -443,8 +462,20 @@ document.addEventListener('DOMContentLoaded', () => {
             console.error('Error:', error);
             aiContent.textContent = 'An error occurred while processing your request.';
             waitingAnimation.remove();
+        } finally {
+            enableSendInterface();
         }
     }
+
+    sendButton.addEventListener('click', sendMessage);
+    chatInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            if (!isGenerating) {
+                sendMessage();
+            }
+        }
+    });
 
     function handlePaste(event) {
         const items = (event.clipboardData || event.originalEvent.clipboardData).items;
