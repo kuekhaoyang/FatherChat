@@ -20,8 +20,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const scrollDownBtn = document.getElementById('scroll-down-btn');
     const chatArea = document.querySelector('.chat-area');
 
+    let uploadedFiles = [];
     let isGenerating = false;
-
+    let chatHistory = [];
+    
     const defaultSettings = {
         'model-provider': 'openai',
         'api-key': '',
@@ -48,7 +50,6 @@ document.addEventListener('DOMContentLoaded', () => {
         'gemma-7b-it', 'gemma2-9b-it'
     ];
   
-    let uploadedFiles = [];
 
     function startNewChat() {
         chatMessages.innerHTML = '';
@@ -284,8 +285,16 @@ document.addEventListener('DOMContentLoaded', () => {
     }, 500);
 
     function preprocessLatex(content) {
-        content = content.replace(/\\\((.*?)\\\)/g, '$$$1$');
-        content = content.replace(/\\\[(.*?)\\\]/g, '$$$$ $1 $$$$');
+        content = content.replace(/\\\[([\s\S]*?)\\\]/g, (match, p1) => {
+            p1 = p1.trim();
+            return `$$ ${p1} $$`;
+        });
+
+        content = content.replace(/\\\((.*?)\\\)/g, (match, p1) => {
+            p1 = p1.trim();
+            return `$${p1}$`;
+        });
+    
         return content;
     }
 
@@ -300,8 +309,6 @@ document.addEventListener('DOMContentLoaded', () => {
         sendButton.classList.remove('disabled');
         isGenerating = false;
     }
-
-    let chatHistory = [];
 
     async function sendMessage() {
         if (isGenerating) return;
