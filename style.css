@@ -496,6 +496,10 @@ code {
   padding: 12px;
   border-radius: 12px;
   word-wrap: break-word;
+  overflow-wrap: break-word;
+  word-break: break-word;
+  hyphens: auto;
+  overflow: hidden; 
 }
 
 .user-message {
@@ -517,8 +521,9 @@ code {
   font-size: 0.9em;
   border: 1px solid var(--table-border-color);
   border-radius: 8px;
-  overflow: hidden;
-  box-shadow: 0 0 20px rgba(0, 0, 0, 0.15);
+  overflow-x: auto;
+  display: block;
+  max-width: 100%;
 }
 
 .message th,
@@ -526,6 +531,29 @@ code {
   padding: 12px 15px;
   text-align: left;
   border: 1px solid var(--table-border-color);
+  white-space: nowrap; 
+  min-width: 100px; 
+}
+
+.message .MathJax {
+  overflow-x: auto;
+  max-width: 100%;
+  display: inline-block;
+}
+
+.message .MathJax_Display {
+  overflow-x: auto;
+  max-width: 100%;
+}
+
+.message {
+  overflow: visible !important;
+}
+
+.table-container {
+  width: 100%;
+  overflow-x: auto;
+  margin-bottom: 1em;
 }
 
 .message thead tr {
@@ -602,5 +630,10 @@ code {
   .chat-input {
     min-height: 36px;
     height: 36px;
+  }
+  .message th,
+  .message td {
+    font-size: 0.8em;
+    padding: 8px;
   }
 }
