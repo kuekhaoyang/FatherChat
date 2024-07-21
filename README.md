@@ -4,7 +4,7 @@ FatherChat is a web-based chat application that allows users to interact with AI
 
 ## Demo
 
-You can try out the live demo of FatherChat at: [FatherChat](https://kuekhaoyang.github.io/FatherChat/)
+You can try out the live demo of FatherChat at: [FatherChat](https://fatherchat.fatherxtreme.cloudns.be/)
 
 ## Features
 
