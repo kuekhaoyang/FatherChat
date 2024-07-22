@@ -49,7 +49,6 @@ document.addEventListener('DOMContentLoaded', () => {
             'llama3-groq-70b-8192-tool-use-preview', 'mixtral-8x7b-32768', 'gemma-7b-it', 'gemma2-9b-it'
     ];
   
-
     function startNewChat() {
         chatMessages.innerHTML = '';
         chatInput.value = '';
@@ -343,7 +342,8 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     
         const userMessageElement = displayMessage(messageContent.innerHTML, 'user', userMessage);
-    
+        scrollToBottom();
+
         chatInput.value = '';
         fileContainer.innerHTML = '';
         fileContainer.style.display = 'none';
@@ -450,6 +450,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                     const copyButton = createMessageCopyButton(aiMessageElement, aiResponse);
                                     aiMessageElement.appendChild(copyButton);
                                 }
+                                chatArea.scrollTop = chatArea.scrollHeight;
                             }
                         } catch (error) {
                             console.warn('Failed to parse JSON:', jsonLine, error);
