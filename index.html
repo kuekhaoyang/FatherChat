@@ -85,7 +85,16 @@
             <label for="api-host">API Host:</label>
             <input type="text" id="api-host" name="api-host">
             <label for="model">Model:</label>
-            <select id="model" name="model"></select>
+            <div class="model-selection">
+                <select id="model" name="model"></select>
+                <input type="text" id="custom-model" name="custom-model" style="display: none;">
+                <div class="checkbox-wrapper">
+                    <label class="custom-checkbox">
+                        <input type="checkbox" id="model-switch">
+                        <span class="checkmark"></span>
+                    </label>
+                </div>
+            </div>
             <label for="temperature">Temperature:</label>
             <input type="number" id="temperature" name="temperature" step="0.1" min="0" max="1">
             <label for="top-p">Top P:</label>

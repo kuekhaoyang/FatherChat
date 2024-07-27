@@ -88,6 +88,17 @@ document.addEventListener('DOMContentLoaded', () => {
                     if (key === 'model-provider') {
                         element.value = settings[key];
                         element.dispatchEvent(new Event('change'));
+                    } else if (key === 'model') {
+                        if (settings[key] in modelSelect.options) {
+                            modelSelect.value = settings[key];
+                            modelSwitch.checked = false;
+                            customModelInput.style.display = 'none';
+                        } else {
+                            customModelInput.value = settings[key];
+                            modelSwitch.checked = true;
+                            modelSelect.style.display = 'none';
+                            customModelInput.style.display = 'block';
+                        }
                     } else if (key === 'system-prompt') {
                         element.value = settings[key];
                     } else {
@@ -102,7 +113,11 @@ document.addEventListener('DOMContentLoaded', () => {
         const settings = {};
         for (const element of settingsForm.elements) {
             if (element.name) {
-                settings[element.name] = element.value;
+                if (element.name === 'model') {
+                    settings[element.name] = modelSwitch.checked ? customModelInput.value : element.value;
+                } else {
+                    settings[element.name] = element.value;
+                }
             }
         }
         localStorage.setItem('settings', JSON.stringify(settings));
@@ -629,4 +644,19 @@ document.addEventListener('DOMContentLoaded', () => {
     fileUpload.addEventListener('change', handleFileUpload);
 
     populateModelDropdown(openAIModels);
+
+    const modelSwitch = document.getElementById('model-switch');
+    const customModelInput = document.getElementById('custom-model');
+
+    modelSwitch.addEventListener('change', () => {
+        if (modelSwitch.checked) {
+            modelSelect.style.display = 'none';
+            customModelInput.style.display = 'block';
+            customModelInput.value = modelSelect.value;
+        } else {
+            modelSelect.style.display = 'block';
+            customModelInput.style.display = 'none';
+            modelSelect.value = customModelInput.value;
+        }
+    });
 });
