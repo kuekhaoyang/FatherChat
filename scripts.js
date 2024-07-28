@@ -19,10 +19,14 @@ document.addEventListener('DOMContentLoaded', () => {
     const fileContainer = document.getElementById('file-container');
     const scrollDownBtn = document.getElementById('scroll-down-btn');
     const chatArea = document.querySelector('.chat-area');
+    const historySearch = document.getElementById('history-search');
 
     let uploadedFiles = [];
     let isGenerating = false;
     let chatHistory = [];
+    let histories = [];
+    let currentHistoryId = null;
+    let conversationContext = {};
     
     const defaultSettings = {
         'model-provider': 'openai',
@@ -68,8 +72,8 @@ document.addEventListener('DOMContentLoaded', () => {
         'NousResearch/Nous-Hermes-Llama2-13b', 'lmsys/vicuna-13b-v1.5', 'Qwen/Qwen1.5-0.5B-Chat',
         'codellama/CodeLlama-70b-Python-hf', 'codellama/CodeLlama-7b-Instruct-hf',
         'NousResearch/Nous-Hermes-2-Yi-34B', 'codellama/CodeLlama-13b-Instruct-hf',
-        'BAAI/bge-large-en-v1.5', 'togethercomputer/Llama-3-8b-chat-hf-int4',
-        'meta-llama/Llama-2-13b-hf', 'teknium/OpenHermes-2p5-Mistral-7B',
+        'BAAI/bge-large-en-v1.5', 'togethercomputer/Llama-2-7B-32K-Instruct',
+        'meta-llama/Meta-Llama-3.1-70B-Instruct-Turbo', 'teknium/OpenHermes-2p5-Mistral-7B',
         'NousResearch/Nous-Capybara-7B-V1p9', 'WizardLM/WizardCoder-Python-34B-V1.0',
         'NousResearch/Nous-Hermes-2-Mistral-7B-DPO', 'togethercomputer/StripedHyena-Nous-7B',
         'togethercomputer/alpaca-7b', 'garage-bAInd/Platypus2-70B-instruct', 'google/gemma-2b',
@@ -121,15 +125,219 @@ document.addEventListener('DOMContentLoaded', () => {
         'gradientai/Llama-3-70B-Instruct-Gradient-1048k', 'meta-llama/Meta-Llama-3.1-70B-Instruct-Reference'
     ];
   
+    function createNewHistory(firstMessage) {
+        const newHistory = {
+            id: Date.now(),
+            title: firstMessage.substring(0, 30) + (firstMessage.length > 30 ? '...' : ''),
+            messages: []
+        };
+        histories.unshift(newHistory);
+        currentHistoryId = newHistory.id;
+        conversationContext[currentHistoryId] = ''; 
+        updateHistoryList();
+        saveHistoriesToLocalStorage();
+        return newHistory;
+    }
+
+    function updateHistoryList(filteredHistories = histories) {
+        const historyList = document.getElementById('history-list');
+        historyList.innerHTML = '';
+        
+        const isLargeScreen = window.innerWidth > 768; 
+        
+        filteredHistories.forEach(history => {
+            const historyItem = document.createElement('div');
+            historyItem.classList.add('history-item');
+            historyItem.setAttribute('data-id', history.id);
+            if (history.id === currentHistoryId) {
+                historyItem.classList.add('active');
+            }
+
+            const historyItemText = document.createElement('span');
+            historyItemText.classList.add('history-item-text');
+            
+            if (isLargeScreen) {
+                historyItemText.textContent = history.title.length > 15 
+                    ? history.title.substring(0, 15) + '...' 
+                    : history.title;
+            } else {
+                historyItemText.textContent = history.title.length > 1 
+                    ? history.title.substring(0, 1) + '...' 
+                    : history.title;
+            }
+            
+            historyItem.appendChild(historyItemText);
+
+            const buttonsContainer = document.createElement('div');
+            buttonsContainer.classList.add('history-item-buttons');
+
+            const editButton = createHistoryButton('edit.svg', 'Edit', () => editHistory(history.id));
+            const deleteButton = createHistoryButton('delete.svg', 'Delete', () => deleteHistory(history.id));
+
+            buttonsContainer.appendChild(editButton);
+            buttonsContainer.appendChild(deleteButton);
+            historyItem.appendChild(buttonsContainer);
+
+            historyItem.addEventListener('click', (e) => {
+                if (!e.target.closest('.history-item-button')) {
+                    loadHistory(history.id);
+                }
+            });
+            historyList.appendChild(historyItem);
+        });
+    }
+
+    window.addEventListener('resize', debounce(() => {
+        updateHistoryList();
+    }, 250));
+
+    function createHistoryButton(iconSrc, altText, onClick) {
+        const button = document.createElement('button');
+        button.classList.add('history-item-button');
+        const img = document.createElement('img');
+        img.src = `assets/${iconSrc}`;
+        img.alt = altText;
+        button.appendChild(img);
+        button.addEventListener('click', onClick);
+        return button;
+    }
+
+    function editHistory(historyId) {
+        const historyItem = document.querySelector(`.history-item[data-id="${historyId}"]`);
+        if (!historyItem) return;
+
+        const historyItemText = historyItem.querySelector('.history-item-text');
+        const currentTitle = historyItemText.textContent;
+
+        const inputElement = document.createElement('input');
+        inputElement.type = 'text';
+        inputElement.value = currentTitle;
+        inputElement.className = 'history-item-edit-input';
+
+        historyItemText.innerHTML = '';
+        historyItemText.appendChild(inputElement);
+        inputElement.focus();
+
+        inputElement.addEventListener('blur', finishEditing);
+        inputElement.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                finishEditing();
+            } else if (e.key === 'Escape') {
+                cancelEditing();
+            }
+        });
+
+        function finishEditing() {
+            const newTitle = inputElement.value.trim();
+            if (newTitle !== '' && newTitle !== currentTitle) {
+                const history = histories.find(h => h.id === historyId);
+                if (history) {
+                    history.title = newTitle;
+                    historyItemText.textContent = newTitle;
+                    updateHistoryList();
+                    saveHistoriesToLocalStorage();
+                }
+            } else {
+                cancelEditing();
+            }
+        }
+
+        function cancelEditing() {
+            historyItemText.textContent = currentTitle;
+        }
+    }
+    function deleteHistory(historyId) {
+        histories = histories.filter(h => h.id !== historyId);
+        if (currentHistoryId === historyId) {
+            currentHistoryId = null;
+            chatMessages.innerHTML = '';
+        }
+        updateHistoryList();
+        saveHistoriesToLocalStorage();
+    }
+
+    function loadHistory(historyId) {
+        currentHistoryId = historyId;
+        const history = histories.find(h => h.id === historyId);
+        if (history) {
+            chatMessages.innerHTML = '';
+            history.messages.forEach(message => {
+                if (message.sender === 'user') {
+                    displayMessage(message.content, 'user', message.originalContent);
+                } else if (message.sender === 'ai') {
+                    const aiMessageElement = displayMessage('', 'ai');
+                    const aiContent = aiMessageElement.querySelector('.ai-content');
+                    aiContent.innerHTML = message.content;
+                    aiMessageElement.setAttribute('data-original-content', message.originalContent);
+                    
+                    aiMessageElement.querySelectorAll('pre code').forEach((block) => {
+                        hljs.highlightElement(block);
+                        const pre = block.parentNode;
+                        if (!pre.querySelector('.copy-button')) {
+                            block.setAttribute('data-original-text', block.textContent);
+                            const copyButton = createCopyButton(block);
+                            pre.appendChild(copyButton);
+                        }
+                    });
+
+                    if (!aiMessageElement.querySelector('.message-copy-button')) {
+                        const copyButton = createMessageCopyButton(aiMessageElement, message.originalContent);
+                        aiMessageElement.appendChild(copyButton);
+                    }
+                }
+            });
+            updateHistoryList();
+            
+            chatArea.scrollTop = chatArea.scrollHeight;
+            
+            MathJax.typesetPromise([chatMessages]).catch((err) => console.error(err.message));
+
+            if (!conversationContext[currentHistoryId]) {
+                conversationContext[currentHistoryId] = '';
+                history.messages.forEach(message => {
+                    conversationContext[currentHistoryId] += ' ' + message.content;
+                });
+                if (conversationContext[currentHistoryId].length > 2000) {
+                    conversationContext[currentHistoryId] = conversationContext[currentHistoryId].slice(-2000);
+                }
+            }
+        }
+    }
+
+    function saveHistoriesToLocalStorage() {
+        localStorage.setItem('chatHistories', JSON.stringify(histories));
+        localStorage.setItem('conversationContext', JSON.stringify(conversationContext));
+    }
+
+    function loadHistoriesFromLocalStorage() {
+        const savedHistories = localStorage.getItem('chatHistories');
+        const savedContext = localStorage.getItem('conversationContext');
+        if (savedHistories) {
+            histories = JSON.parse(savedHistories);
+            updateHistoryList();
+        }
+        if (savedContext) {
+            conversationContext = JSON.parse(savedContext);
+        }
+    }
+
+    function searchHistory(query) {
+        const filteredHistories = histories.filter(history => 
+            history.title.toLowerCase().includes(query.toLowerCase())
+        );
+        updateHistoryList(filteredHistories);
+    }
+
     function startNewChat() {
         chatMessages.innerHTML = '';
         chatInput.value = '';
         fileContainer.innerHTML = '';
         fileContainer.style.display = 'none';
         uploadedFiles = [];
+        currentHistoryId = null;
         chatHistory = []; 
-        scrollDownBtn.style.display = 'none'; 
-        toggleScrollDownButton(); 
+        scrollDownBtn.style.display = 'none';
+        toggleScrollDownButton();
     }
 
     function returnToHomePage() {
@@ -386,6 +594,10 @@ document.addEventListener('DOMContentLoaded', () => {
         const userMessage = chatInput.value.trim();
         if (userMessage === '' && uploadedFiles.length === 0) return;
 
+        if (!currentHistoryId) {
+            createNewHistory(userMessage);
+        }
+
         disableSendInterface();
         isGenerating = true;
     
@@ -430,26 +642,28 @@ document.addEventListener('DOMContentLoaded', () => {
     
         try {
             const messages = [
-                { role: "system", content: settings['system-prompt'] },
-                ...chatHistory,
-                { role: "user", content: [] }
+                { role: "system", content: settings['system-prompt'] }
             ];
-    
+
+            if (conversationContext[currentHistoryId]) {
+                messages.push({ role: "system", content: `Previous context: ${conversationContext[currentHistoryId]}` });
+            }
+
+            messages.push(...chatHistory);
+
+            const userContent = [];
             if (userMessage !== '') {
-                messages[messages.length - 1].content.push({ type: "text", text: userMessage });
+                userContent.push({ type: "text", text: userMessage });
             }
-    
-            if (imageDataUrls.length > 0) {
-                messages[messages.length - 1].content.push({ type: "text", text: userMessage });
-                imageDataUrls.forEach(dataUrl => {
-                    messages[messages.length - 1].content.push({
-                        type: "image_url",
-                        image_url: { url: dataUrl }
-                    });
+            imageDataUrls.forEach(dataUrl => {
+                userContent.push({
+                    type: "image_url",
+                    image_url: { url: dataUrl }
                 });
-            }
-    
-            chatHistory.push({ role: "user", content: messages[messages.length - 1].content });
+            });
+            messages.push({ role: "user", content: userContent });
+
+            chatHistory.push({ role: "user", content: userContent });
     
             const response = await fetch(settings['api-host'] + '/chat/completions', {
                 method: 'POST',
@@ -537,6 +751,23 @@ document.addEventListener('DOMContentLoaded', () => {
 
             MathJax.typesetPromise([aiMessageElement]).catch((err) => console.error(err.message));
 
+            const currentHistory = histories.find(h => h.id === currentHistoryId);
+            currentHistory.messages.push({ sender: 'user', content: messageContent.innerHTML, originalContent: userMessage });
+            currentHistory.messages.push({ sender: 'ai', content: aiContent.innerHTML, originalContent: aiResponse });
+            
+            if (currentHistory.messages.length === 2) {
+                currentHistory.title = userMessage.substring(0, 30) + (userMessage.length > 30 ? '...' : '');
+            }
+
+            updateHistoryList();
+            saveHistoriesToLocalStorage();
+
+            conversationContext[currentHistoryId] += ' ' + userMessage + ' ' + aiResponse;
+
+            if (conversationContext[currentHistoryId].length > 2000) {
+                conversationContext[currentHistoryId] = conversationContext[currentHistoryId].slice(-2000);
+            }
+
         } catch (error) {
             console.error('Error:', error);
             aiContent.textContent = 'An error occurred while processing your request.';
@@ -616,7 +847,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 fileItem.remove();
                 uploadedFiles = uploadedFiles.filter(f => f !== file);
                 if (fileContainer.children.length === 0) {
-                    fileContainer.style.display = 'none';
+                  fileContainer.style.display = 'none';
                 }
             });
 
@@ -703,4 +934,8 @@ document.addEventListener('DOMContentLoaded', () => {
     fileUpload.addEventListener('change', handleFileUpload);
 
     populateModelDropdown(openAIModels);
+
+    historySearch.addEventListener('input', (e) => searchHistory(e.target.value));
+
+    loadHistoriesFromLocalStorage();
 });
