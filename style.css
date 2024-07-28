@@ -205,9 +205,12 @@ body {
   display: flex;
   justify-content: space-between;
   margin-top: 24px;
+  flex-wrap: wrap;
+  gap: 10px;
 }
 
 .settings-buttons button {
+  flex: 1 0 calc(50% - 5px);
   padding: 8px 16px;
   background-color: transparent;
   border: 1px solid var(--accent-color);
