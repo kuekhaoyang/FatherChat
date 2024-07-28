@@ -730,3 +730,9 @@ code {
 .sidebar.closed .search-box {
     display: none;
 }
+
+@media (max-width: 768px) {
+  .settings{
+    margin-bottom: 50px;
+  }
+}
