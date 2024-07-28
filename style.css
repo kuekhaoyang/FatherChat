@@ -37,13 +37,14 @@ body {
   justify-content: space-between;
   padding: 0 16px;
   margin-bottom: 16px;
+  transition: flex-direction 0.3s ease, align-items 0.3s ease;
 }
 
 .sidebar-btn {
   background-color: transparent;
   border: none;
   cursor: pointer;
-  transition: opacity 0.3s ease;
+  transition: opacity 0.3s ease, margin 0.3s ease;
   position: relative;
 }
 
@@ -485,11 +486,32 @@ code {
 
 .sidebar.closed {
   width: 60px;
-  background-color: var(--primary-color);
+  background-color: flex;
 }
 
 .sidebar.closed .button, .sidebar.closed .settings, .sidebar.closed .button span, .sidebar.closed .settings span {
   display: none;
+}
+
+.sidebar.closed .sidebar-header {
+  flex-direction: column;
+  align-items: center;
+}
+
+.sidebar-btn[data-tooltip="New Chat"] {
+  transition: margin-top 0.3s ease;
+}
+
+.sidebar.closed .sidebar-btn[data-tooltip="New Chat"] {
+  margin-top: 16px;
+}
+
+.sidebar-btn[data-tooltip="Toggle Sidebar"] {
+  transition: margin-bottom 0.3s ease;
+}
+
+.sidebar.closed .sidebar-btn[data-tooltip="Toggle Sidebar"] {
+  margin-bottom: 16px;
 }
 
 #chat-messages {
@@ -603,46 +625,6 @@ code {
   max-width: 90%;
   max-height: 90%;
   object-fit: contain;
-}
-
-@media (max-width: 768px) {
-  .sidebar {
-    width: 60px;
-  }
-  .sidebar .button span, 
-  .sidebar .settings span {
-    display: none;
-  }
-  .sidebar {
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    align-items: center;
-    padding-bottom: 16px;
-  }
-  .sidebar .sidebar-header {
-    flex-direction: column;
-    align-items: center;
-    margin-bottom: 0;
-  }
-  .sidebar #new-chat {
-    margin-top: auto;
-  }
-  .sidebar .sidebar-btn {
-    margin-bottom: 16px;
-  }
-  .settings{
-    margin-bottom: 50px;
-  }
-  .chat-input {
-    min-height: 36px;
-    height: 36px;
-  }
-  .message th,
-  .message td {
-    font-size: 0.8em;
-    padding: 8px;
-  }
 }
 
 .search-box {

@@ -142,8 +142,23 @@ document.addEventListener('DOMContentLoaded', () => {
     function updateHistoryList(filteredHistories = histories) {
         const historyList = document.getElementById('history-list');
         historyList.innerHTML = '';
-        
-        const isLargeScreen = window.innerWidth > 768; 
+
+        const sidebar = document.querySelector('.sidebar');
+        const toggleButton = document.querySelector('.sidebar-btn[data-tooltip="Toggle Sidebar"]');
+
+        function setSidebarState() {
+            if (window.innerWidth < 768) {
+                sidebar.classList.add('closed');
+                toggleButton.setAttribute('data-tooltip', 'Open Sidebar');
+            } else {
+                sidebar.classList.remove('closed');
+                toggleButton.setAttribute('data-tooltip', 'Close Sidebar');
+            }
+        }
+
+        setSidebarState();
+
+        window.addEventListener('resize', debounce(setSidebarState, 250));
         
         filteredHistories.forEach(history => {
             const historyItem = document.createElement('div');
@@ -156,15 +171,9 @@ document.addEventListener('DOMContentLoaded', () => {
             const historyItemText = document.createElement('span');
             historyItemText.classList.add('history-item-text');
             
-            if (isLargeScreen) {
-                historyItemText.textContent = history.title.length > 15 
-                    ? history.title.substring(0, 15) + '...' 
-                    : history.title;
-            } else {
-                historyItemText.textContent = history.title.length > 1 
-                    ? history.title.substring(0, 1) + '...' 
-                    : history.title;
-            }
+            historyItemText.textContent = history.title.length > 15 
+                ? history.title.substring(0, 15) + '...' 
+                : history.title;
             
             historyItem.appendChild(historyItemText);
 
