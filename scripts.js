@@ -595,6 +595,10 @@ document.addEventListener('DOMContentLoaded', () => {
             messageElement.setAttribute('data-original-content', originalContent);
         } else {
             messageElement.innerHTML = content;
+            
+            messageElement.querySelectorAll('img').forEach(img => {
+                img.addEventListener('click', () => showFullsizeImage(img.src));
+            });
         }
         
         const copyButton = createMessageCopyButton(messageElement, originalContent || content);
