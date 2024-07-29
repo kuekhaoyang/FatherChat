@@ -147,12 +147,15 @@ document.addEventListener('DOMContentLoaded', () => {
         const toggleButton = document.getElementById('toggle-sidebar');
 
         function setSidebarState() {
-            if (window.innerWidth < 768) {
-                sidebar.classList.add('closed');
-                toggleButton?.setAttribute('data-tooltip', 'Open Sidebar');
-            } else {
-                sidebar.classList.remove('closed');
-                toggleButton?.setAttribute('data-tooltip', 'Close Sidebar');
+            const userToggled = sidebar.hasAttribute('data-user-toggled');
+            if (!userToggled) {
+                if (window.innerWidth < 768) {
+                    sidebar.classList.add('closed');
+                    toggleButton?.setAttribute('data-tooltip', 'Open Sidebar');
+                } else {
+                    sidebar.classList.remove('closed');
+                    toggleButton?.setAttribute('data-tooltip', 'Close Sidebar');
+                }
             }
         }
 
@@ -938,6 +941,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     toggleButton.addEventListener('click', () => {
         sidebar.classList.toggle('closed');
+        sidebar.setAttribute('data-user-toggled', 'true');
         toggleButton.setAttribute('data-tooltip', sidebar.classList.contains('closed') ? 'Open Sidebar' : 'Close Sidebar');
     });
 
