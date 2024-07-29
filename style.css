@@ -78,6 +78,14 @@ body {
   left: 40%; 
 }
 
+.sidebar.closed .sidebar-btn::after {
+  left: 100%;
+}
+
+.sidebar.closed .sidebar-btn[data-tooltip="New Chat"]::after {
+  left: 70%;
+}
+
 .sidebar-btn:hover::after {
   opacity: 1;
 }
