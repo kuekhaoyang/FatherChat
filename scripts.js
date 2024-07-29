@@ -164,6 +164,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const historyItem = document.createElement('div');
             historyItem.classList.add('history-item');
             historyItem.setAttribute('data-id', history.id);
+            historyItem.setAttribute('data-full-title', history.title);
             if (history.id === currentHistoryId) {
                 historyItem.classList.add('active');
             }
@@ -171,9 +172,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const historyItemText = document.createElement('span');
             historyItemText.classList.add('history-item-text');
             
-            historyItemText.textContent = history.title.length > 15 
-                ? history.title.substring(0, 15) + '...' 
-                : history.title;
+            updateHistoryItemText(historyItemText, history.title);
             
             historyItem.appendChild(historyItemText);
 
@@ -192,6 +191,10 @@ document.addEventListener('DOMContentLoaded', () => {
                     loadHistory(history.id);
                 }
             });
+
+            historyItem.addEventListener('mouseenter', showTooltip);
+            historyItem.addEventListener('mouseleave', hideTooltip);
+
             historyList.appendChild(historyItem);
         });
     }
@@ -216,7 +219,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!historyItem) return;
 
         const historyItemText = historyItem.querySelector('.history-item-text');
-        const currentTitle = historyItemText.textContent;
+        const currentTitle = historyItem.getAttribute('data-full-title') || historyItemText.textContent;
 
         const inputElement = document.createElement('input');
         inputElement.type = 'text';
@@ -242,7 +245,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 const history = histories.find(h => h.id === historyId);
                 if (history) {
                     history.title = newTitle;
-                    historyItemText.textContent = newTitle;
+                    historyItem.setAttribute('data-full-title', newTitle);
+                    updateHistoryItemText(historyItemText, newTitle);
                     updateHistoryList();
                     saveHistoriesToLocalStorage();
                 }
@@ -252,9 +256,58 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         function cancelEditing() {
-            historyItemText.textContent = currentTitle;
+            updateHistoryItemText(historyItemText, currentTitle);
         }
     }
+
+    function updateHistoryItemText(element, text) {
+        if (!element) return;
+        
+        element.textContent = text.length > 15 ? text.substring(0, 15) + '...' : text;
+        
+        const parentElement = element.closest('.history-item');
+        if (parentElement) {
+            parentElement.setAttribute('data-full-title', text);
+        }
+    }
+
+    function showTooltip(event) {
+        const historyItem = event.currentTarget;
+        const fullTitle = historyItem.getAttribute('data-full-title');
+        
+        if (fullTitle.length > 15) {
+            const tooltip = document.createElement('div');
+            tooltip.className = 'history-tooltip';
+            tooltip.textContent = fullTitle;
+            
+            historyItem.appendChild(tooltip);
+            
+            const tooltipRect = tooltip.getBoundingClientRect();
+            const sidebarRect = document.querySelector('.sidebar').getBoundingClientRect();
+            
+            if (tooltipRect.bottom > window.innerHeight) {
+                tooltip.style.bottom = 'auto';
+                tooltip.style.top = '-30px';
+            }
+            
+            if (tooltipRect.left < sidebarRect.left) {
+                tooltip.style.left = '0';
+                tooltip.style.transform = 'none';
+            } else if (tooltipRect.right > sidebarRect.right) {
+                tooltip.style.left = 'auto';
+                tooltip.style.right = '0';
+                tooltip.style.transform = 'none';
+            }
+        }
+    }
+
+    function hideTooltip(event) {
+        const tooltip = event.currentTarget.querySelector('.history-tooltip');
+        if (tooltip) {
+            tooltip.remove();
+        }
+    }
+
     function deleteHistory(historyId) {
         histories = histories.filter(h => h.id !== historyId);
         if (currentHistoryId === historyId) {

@@ -685,6 +685,7 @@ code {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    position: relative;
 }
 
 .history-item-text {
@@ -751,4 +752,25 @@ code {
   .settings{
     margin-bottom: 50px;
   }
+}
+
+.history-tooltip {
+    position: absolute;
+    background-color: #000000;
+    color: var(--text-color);
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    white-space: nowrap;
+    z-index: 1000;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.3s;
+    left: 50%;
+    transform: translateX(-50%);
+    bottom: -30px;
+}
+
+.history-item:hover .history-tooltip {
+    opacity: 1;
 }
