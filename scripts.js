@@ -144,15 +144,15 @@ document.addEventListener('DOMContentLoaded', () => {
         historyList.innerHTML = '';
 
         const sidebar = document.querySelector('.sidebar');
-        const toggleButton = document.querySelector('.sidebar-btn[data-tooltip="Toggle Sidebar"]');
+        const toggleButton = document.getElementById('toggle-sidebar');
 
         function setSidebarState() {
             if (window.innerWidth < 768) {
                 sidebar.classList.add('closed');
-                toggleButton.setAttribute('data-tooltip', 'Open Sidebar');
+                toggleButton?.setAttribute('data-tooltip', 'Open Sidebar');
             } else {
                 sidebar.classList.remove('closed');
-                toggleButton.setAttribute('data-tooltip', 'Close Sidebar');
+                toggleButton?.setAttribute('data-tooltip', 'Close Sidebar');
             }
         }
 
