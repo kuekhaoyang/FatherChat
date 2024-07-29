@@ -60,7 +60,7 @@ body {
   content: attr(data-tooltip);
   position: absolute;
   top: 100%;
-  left: 90%;
+  left: 110%;
   transform: translateX(-50%);
   background-color: #000000;
   color: var(--text-color);
@@ -75,15 +75,23 @@ body {
 }
 
 .sidebar-btn[data-tooltip="New Chat"]::after {
-  left: 40%; 
+  left: 20%; 
 }
 
 .sidebar.closed .sidebar-btn::after {
   left: 100%;
+  top: 50%;
+  transform: translateY(-50%);
+  margin-top: 0;
+  margin-left: 8px;
 }
 
 .sidebar.closed .sidebar-btn[data-tooltip="New Chat"]::after {
-  left: 70%;
+  left: 100%;
+  top: 50%;
+  transform: translateY(-50%);
+  margin-top: 0;
+  margin-left: 8px;
 }
 
 .sidebar-btn:hover::after {
