@@ -86,14 +86,6 @@ body {
   margin-left: 8px;
 }
 
-.sidebar.closed .sidebar-btn[data-tooltip="New Chat"]::after {
-  left: 100%;
-  top: 50%;
-  transform: translateY(-50%);
-  margin-top: 0;
-  margin-left: 8px;
-}
-
 .sidebar-btn:hover::after {
   opacity: 1;
 }
