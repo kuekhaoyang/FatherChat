@@ -791,6 +791,21 @@ code {
   display: none;
 }
 
+.sidebar.closed .settings {
+  display: flex;
+  justify-content: center;
+  padding: var(--spacing-small);
+  margin-top: auto;
+}
+
+.sidebar.closed .settings span {
+  display: none;
+}
+
+.sidebar.closed .settings img {
+  margin-right: 0;
+}
+
 .history-tooltip {
   position: absolute;
   background-color: var(--color-tooltip-bg);
