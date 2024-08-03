@@ -685,9 +685,6 @@ document.addEventListener('DOMContentLoaded', () => {
                         temperature: parseFloat(settings['temperature']),
                         top_p: parseFloat(settings['top-p']),
                     },
-                    safety_settings: [
-                        { category: "HARM_CATEGORY_HATE_SPEECH", threshold: "BLOCK_MEDIUM_AND_ABOVE" }
-                    ]
                 };
 
                 const response = await fetch(apiUrl, {
