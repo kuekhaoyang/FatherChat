@@ -58,6 +58,12 @@ document.addEventListener('DOMContentLoaded', () => {
         .then(data => togetherAIModels.push(...data))
         .catch(error => console.error('Error loading TogetherAI models:', error));
   
+    const googleModels = [];
+    fetch('models/google.json')
+        .then(response => response.json())
+        .then(data => googleModels.push(...data))
+        .catch(error => console.error('Error loading Google models:', error));
+
     function createNewHistory(firstMessage) {
         const newHistory = {
             id: Date.now(),
@@ -333,6 +339,8 @@ document.addEventListener('DOMContentLoaded', () => {
         chatHistory = []; 
         scrollDownBtn.style.display = 'none';
         toggleScrollDownButton();
+        isGenerating = false;
+        enableSendInterface();
     }
 
     function returnToHomePage() {
@@ -664,107 +672,165 @@ document.addEventListener('DOMContentLoaded', () => {
 
             chatHistory.push({ role: "user", content: userContent });
     
-            const response = await fetch(settings['api-host'] + '/chat/completions', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${settings['api-key']}`
-                },
-                body: JSON.stringify({
-                    model: settings['model'],
-                    messages: messages,
-                    max_tokens: 1000,
-                    temperature: parseFloat(settings['temperature']),
-                    top_p: parseFloat(settings['top-p']),
-                    presence_penalty: parseFloat(settings['presence-penalty']),
-                    frequency_penalty: parseFloat(settings['frequency-penalty']),
-                    stream: true
-                })
-            });
-    
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-    
-            const reader = response.body.getReader();
-            const decoder = new TextDecoder();
-            let buffer = '';
-            let aiResponse = '';
-            while (true) {
-                const { done, value } = await reader.read();
-                if (done) break;
-
-                buffer += decoder.decode(value, { stream: true });
-                const lines = buffer.split('\n');
-                buffer = lines.pop();
-
-                for (const line of lines) {
-                    if (line.startsWith('data: ')) {
-                        const jsonLine = line.slice(6).trim();
-                        if (jsonLine === '[DONE]') {
-                            break;
+            if (settings['model-provider'] === 'google') {
+                const apiUrl = `${settings['api-host']}/${settings['model']}:generateContent?key=${settings['api-key']}`;
+                const requestBody = {
+                    contents: [
+                        {
+                            role: "user",
+                            parts: [{ text: userMessage }]
                         }
-                        try {
-                            const jsonData = JSON.parse(jsonLine);
-                            const content = jsonData.choices[0].delta.content;
-                            if (content) {
-                                if (aiResponse === '') {
-                                    aiContent.innerHTML = '';
-                                }
-                                aiResponse += content;
-                                const preprocessedContent = preprocessLatex(aiResponse);
-                                const renderedContent = marked.parse(preprocessedContent);
-                                aiContent.innerHTML = renderedContent;
-                                aiContent.appendChild(waitingAnimation);
-                                toggleScrollDownButton();
+                    ],
+                    generation_config: {
+                        temperature: parseFloat(settings['temperature']),
+                        top_p: parseFloat(settings['top-p']),
+                    },
+                    safety_settings: [
+                        { category: "HARM_CATEGORY_HATE_SPEECH", threshold: "BLOCK_MEDIUM_AND_ABOVE" }
+                    ]
+                };
 
-                                debouncedRender(aiMessageElement);
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(requestBody)
+                });
 
-                                aiMessageElement.querySelectorAll('pre code').forEach((block) => {
-                                    const pre = block.parentNode;
-                                    if (!pre.querySelector('.copy-button')) {
-                                        block.setAttribute('data-original-text', block.textContent);
-                                        const copyButton = createCopyButton(block);
-                                        pre.appendChild(copyButton);
-                                    }
-                                });
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
 
-                                aiMessageElement.setAttribute('data-original-content', aiResponse);
+                const data = await response.json();
+                aiResponse = data.candidates[0].content.parts[0].text;
 
-                                if (!aiMessageElement.querySelector('.message-copy-button')) {
-                                    const copyButton = createMessageCopyButton(aiMessageElement, aiResponse);
-                                    aiMessageElement.appendChild(copyButton);
-                                }
-                                chatArea.scrollTop = chatArea.scrollHeight;
+                aiContent.innerHTML = marked.parse(preprocessLatex(aiResponse));
+                aiContent.appendChild(waitingAnimation);
+                toggleScrollDownButton();
+
+                debouncedRender(aiMessageElement);
+
+                aiMessageElement.querySelectorAll('pre code').forEach((block) => {
+                    const pre = block.parentNode;
+                    if (!pre.querySelector('.copy-button')) {
+                        block.setAttribute('data-original-text', block.textContent);
+                        const copyButton = createCopyButton(block);
+                        pre.appendChild(copyButton);
+                    }
+                });
+
+                aiMessageElement.setAttribute('data-original-content', aiResponse);
+
+                if (!aiMessageElement.querySelector('.message-copy-button')) {
+                    const copyButton = createMessageCopyButton(aiMessageElement, aiResponse);
+                    aiMessageElement.appendChild(copyButton);
+                }
+                chatArea.scrollTop = chatArea.scrollHeight;
+
+            } else {
+                const response = await fetch(settings['api-host'] + '/chat/completions', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${settings['api-key']}`
+                    },
+                    body: JSON.stringify({
+                        model: settings['model'],
+                        messages: messages,
+                        max_tokens: 1000,
+                        temperature: parseFloat(settings['temperature']),
+                        top_p: parseFloat(settings['top-p']),
+                        presence_penalty: parseFloat(settings['presence-penalty']),
+                        frequency_penalty: parseFloat(settings['frequency-penalty']),
+                        stream: true
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const reader = response.body.getReader();
+                const decoder = new TextDecoder();
+                let buffer = '';
+                let aiResponse = '';
+                while (true) {
+                    const { done, value } = await reader.read();
+                    if (done) break;
+
+                    buffer += decoder.decode(value, { stream: true });
+                    const lines = buffer.split('\n');
+                    buffer = lines.pop();
+
+                    for (const line of lines) {
+                        if (line.startsWith('data: ')) {
+                            const jsonLine = line.slice(6).trim();
+                            if (jsonLine === '[DONE]') {
+                                break;
                             }
-                        } catch (error) {
-                            console.warn('Failed to parse JSON:', jsonLine, error);
+                            try {
+                                const jsonData = JSON.parse(jsonLine);
+                                const content = jsonData.choices[0].delta.content;
+                                if (content) {
+                                    if (aiResponse === '') {
+                                        aiContent.innerHTML = '';
+                                    }
+                                    aiResponse += content;
+                                    const preprocessedContent = preprocessLatex(aiResponse);
+                                    const renderedContent = marked.parse(preprocessedContent);
+                                    aiContent.innerHTML = renderedContent;
+                                    aiContent.appendChild(waitingAnimation);
+                                    toggleScrollDownButton();
+
+                                    debouncedRender(aiMessageElement);
+
+                                    aiMessageElement.querySelectorAll('pre code').forEach((block) => {
+                                        const pre = block.parentNode;
+                                        if (!pre.querySelector('.copy-button')) {
+                                            block.setAttribute('data-original-text', block.textContent);
+                                            const copyButton = createCopyButton(block);
+                                            pre.appendChild(copyButton);
+                                        }
+                                    });
+
+                                    aiMessageElement.setAttribute('data-original-content', aiResponse);
+
+                                    if (!aiMessageElement.querySelector('.message-copy-button')) {
+                                        const copyButton = createMessageCopyButton(aiMessageElement, aiResponse);
+                                        aiMessageElement.appendChild(copyButton);
+                                    }
+                                    chatArea.scrollTop = chatArea.scrollHeight;
+                                }
+                            } catch (error) {
+                                console.warn('Failed to parse JSON:', jsonLine, error);
+                            }
                         }
                     }
                 }
-            }
 
-            waitingAnimation.remove();
+                waitingAnimation.remove();
 
-            chatHistory.push({ role: "assistant", content: aiResponse });
+                chatHistory.push({ role: "assistant", content: aiResponse });
 
-            MathJax.typesetPromise([aiMessageElement]).catch((err) => console.error(err.message));
+                MathJax.typesetPromise([aiMessageElement]).catch((err) => console.error(err.message));
 
-            const currentHistory = histories.find(h => h.id === currentHistoryId);
-            currentHistory.messages.push({ sender: 'user', content: messageContent.innerHTML, originalContent: userMessage });
-            currentHistory.messages.push({ sender: 'ai', content: aiContent.innerHTML, originalContent: aiResponse });
-            
-            if (currentHistory.messages.length === 2) {
-                currentHistory.title = userMessage.substring(0, 30) + (userMessage.length > 30 ? '...' : '');
-            }
+                const currentHistory = histories.find(h => h.id === currentHistoryId);
+                currentHistory.messages.push({ sender: 'user', content: messageContent.innerHTML, originalContent: userMessage });
+                currentHistory.messages.push({ sender: 'ai', content: aiContent.innerHTML, originalContent: aiResponse });
+                
+                if (currentHistory.messages.length === 2) {
+                    currentHistory.title = userMessage.substring(0, 30) + (userMessage.length > 30 ? '...' : '');
+                }
 
-            updateHistoryList();
-            saveHistoriesToLocalStorage();
+                updateHistoryList();
+                saveHistoriesToLocalStorage();
 
-            conversationContext[currentHistoryId] += ' ' + userMessage + ' ' + aiResponse;
+                conversationContext[currentHistoryId] += ' ' + userMessage + ' ' + aiResponse;
 
-            if (conversationContext[currentHistoryId].length > 2000) {
-                conversationContext[currentHistoryId] = conversationContext[currentHistoryId].slice(-2000);
+                if (conversationContext[currentHistoryId].length > 2000) {
+                    conversationContext[currentHistoryId] = conversationContext[currentHistoryId].slice(-2000);
+                }
             }
 
         } catch (error) {
@@ -913,6 +979,9 @@ document.addEventListener('DOMContentLoaded', () => {
         } else if (event.target.value === 'together') {
             apiHostInput.value = 'https://api.together.xyz/v1';
             populateModelDropdown(togetherAIModels);
+        } else if (event.target.value === 'google') {
+            apiHostInput.value = 'https://generativelanguage.googleapis.com/v1/models';
+            populateModelDropdown(googleModels);
         }
     });
 
